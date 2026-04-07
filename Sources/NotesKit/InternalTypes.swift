@@ -13,6 +13,8 @@ internal struct NoteRecord {
   let creationDate: Date?
   let isPinned: Bool
   let isPasswordProtected: Bool
+  let isMarkedForDeletion: Bool
+  let changeCounter: Int64
   let folderIdentifier: String?
   let accountIdentifier: String?
 }
@@ -47,6 +49,9 @@ internal struct AttachmentRecord {
   let metadataJSON: String?
   let creationDate: Date?
   let modificationDate: Date?
+  let isMarkedForDeletion: Bool
+  let changeCounter: Int64
+  let generation: String?
 }
 
 internal struct MediaRecord {

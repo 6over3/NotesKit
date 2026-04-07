@@ -80,6 +80,46 @@ public enum NoteAttachment: Equatable, Sendable {
     }
   }
 
+  /// CoreData optimistic lock counter. Increments on every edit.
+  public var changeCounter: Int64 {
+    switch self {
+    case .image(let a): a.changeCounter
+    case .pdf(let a): a.changeCounter
+    case .video(let a): a.changeCounter
+    case .audio(let a): a.changeCounter
+    case .file(let a): a.changeCounter
+    case .drawing(let a): a.changeCounter
+    case .url(let a): a.changeCounter
+    case .table(let a): a.changeCounter
+    case .calendar(let a): a.changeCounter
+    case .vcard(let a): a.changeCounter
+    case .gallery(let a): a.changeCounter
+    case .scan(let a): a.changeCounter
+    case .unknown(let a): a.changeCounter
+    case .deleted(let a): a.changeCounter
+    }
+  }
+
+  /// Media generation identifier. Changes when the attachment's backing file is regenerated.
+  public var generation: String? {
+    switch self {
+    case .image(let a): a.generation
+    case .pdf(let a): a.generation
+    case .video(let a): a.generation
+    case .audio(let a): a.generation
+    case .file(let a): a.generation
+    case .drawing(let a): a.generation
+    case .url(let a): a.generation
+    case .table(let a): a.generation
+    case .calendar(let a): a.generation
+    case .vcard(let a): a.generation
+    case .gallery(let a): a.generation
+    case .scan(let a): a.generation
+    case .unknown(let a): a.generation
+    case .deleted(let a): a.generation
+    }
+  }
+
   /// The broad content category of this attachment.
   public var category: UTICategory {
     switch self {
@@ -112,6 +152,8 @@ extension NoteAttachment {
     public let location: Location?
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let fileSize: Int64?
     public let width: Float?
     public let height: Float?
@@ -126,6 +168,8 @@ extension NoteAttachment {
     public let filename: String?
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let fileSize: Int64?
     public let ocrText: String?
     public let additionalIndexableText: String?
@@ -137,6 +181,8 @@ extension NoteAttachment {
     public let filename: String?
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let duration: Double?
     public let fileSize: Int64?
     public let width: Float?
@@ -150,6 +196,8 @@ extension NoteAttachment {
     public let filename: String?
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let duration: Double?
     public let fileSize: Int64?
   }
@@ -160,6 +208,8 @@ extension NoteAttachment {
     public let filename: String?
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let fileSize: Int64?
   }
 
@@ -168,6 +218,8 @@ extension NoteAttachment {
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let width: Float?
     public let height: Float?
     public let fallbackTitle: String?
@@ -181,6 +233,8 @@ extension NoteAttachment {
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let urlString: String?
     public let title: String?
     public let summary: String?
@@ -190,6 +244,8 @@ extension NoteAttachment {
     public let identifier: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
   }
 
   public struct Calendar: Equatable, Sendable {
@@ -197,6 +253,8 @@ extension NoteAttachment {
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
   }
 
   public struct VCard: Equatable, Sendable {
@@ -204,6 +262,8 @@ extension NoteAttachment {
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let filename: String?
   }
 
@@ -211,6 +271,8 @@ extension NoteAttachment {
     public let identifier: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let items: [NoteAttachment]
   }
 
@@ -219,6 +281,8 @@ extension NoteAttachment {
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
     public let ocrText: String?
     public let additionalIndexableText: String?
   }
@@ -228,6 +292,8 @@ extension NoteAttachment {
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
   }
 
   /// An attachment whose backing record was deleted from the database.
@@ -236,6 +302,8 @@ extension NoteAttachment {
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
+    public let changeCounter: Int64
+    public let generation: String?
   }
 }
 

@@ -515,7 +515,8 @@ package struct NoteParser {
     if attachmentRecord == nil {
       return .deleted(
         NoteAttachment.Deleted(
-          identifier: identifier, uti: uti, creationDate: nil, modificationDate: nil))
+          identifier: identifier, uti: uti, creationDate: nil, modificationDate: nil,
+          changeCounter: 0, generation: nil))
     }
 
     let type = classifyAttachmentType(uti)
@@ -559,6 +560,8 @@ package struct NoteParser {
 
     let creationDate = attachmentRecord?.creationDate
     let modificationDate = attachmentRecord?.modificationDate
+    let changeCounter = attachmentRecord?.changeCounter ?? 0
+    let generation = attachmentRecord?.generation
 
     switch type {
     case .image:
@@ -570,6 +573,8 @@ package struct NoteParser {
           location: nil,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           fileSize: fileSize,
           width: width.map(Float.init),
           height: height.map(Float.init),
@@ -586,6 +591,8 @@ package struct NoteParser {
           filename: filename,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           fileSize: fileSize,
           ocrText: ocrText,
           additionalIndexableText: additionalIndexableText
@@ -599,6 +606,8 @@ package struct NoteParser {
           filename: filename,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           duration: duration,
           fileSize: fileSize,
           width: width.map(Float.init),
@@ -614,6 +623,8 @@ package struct NoteParser {
           filename: filename,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           duration: duration,
           fileSize: fileSize
         ))
@@ -627,6 +638,8 @@ package struct NoteParser {
           uti: uti,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           width: width.map(Float.init),
           height: height.map(Float.init),
           fallbackTitle: fallbackTitle,
@@ -643,6 +656,8 @@ package struct NoteParser {
           uti: uti,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           urlString: linkCardData?.url ?? urlString,
           title: linkCardData?.title ?? userTitle,
           summary: nil
@@ -653,7 +668,9 @@ package struct NoteParser {
         NoteAttachment.Table(
           identifier: identifier,
           creationDate: creationDate,
-          modificationDate: modificationDate
+          modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation
         ))
 
     case .calendar:
@@ -662,7 +679,9 @@ package struct NoteParser {
           identifier: identifier,
           uti: uti,
           creationDate: creationDate,
-          modificationDate: modificationDate
+          modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation
         ))
 
     case .vcard:
@@ -672,6 +691,8 @@ package struct NoteParser {
           uti: uti,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           filename: filename
         ))
 
@@ -681,6 +702,8 @@ package struct NoteParser {
           identifier: identifier,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           items: []
         ))
 
@@ -691,6 +714,8 @@ package struct NoteParser {
           uti: uti,
           creationDate: creationDate,
           modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation,
           ocrText: ocrText,
           additionalIndexableText: additionalIndexableText
         ))
@@ -701,7 +726,9 @@ package struct NoteParser {
           identifier: identifier,
           uti: uti,
           creationDate: creationDate,
-          modificationDate: modificationDate
+          modificationDate: modificationDate,
+          changeCounter: changeCounter,
+          generation: generation
         ))
     }
   }
@@ -889,6 +916,8 @@ package struct NoteParser {
               location: nil,
               creationDate: childRecord.creationDate,
               modificationDate: childRecord.modificationDate,
+              changeCounter: childRecord.changeCounter,
+              generation: childRecord.generation,
               fileSize: childRecord.fileSize,
               width: width.map(Float.init),
               height: height.map(Float.init),
@@ -904,6 +933,8 @@ package struct NoteParser {
               filename: filename,
               creationDate: childRecord.creationDate,
               modificationDate: childRecord.modificationDate,
+              changeCounter: childRecord.changeCounter,
+              generation: childRecord.generation,
               duration: childRecord.duration,
               fileSize: childRecord.fileSize,
               width: width.map(Float.init),
@@ -915,7 +946,9 @@ package struct NoteParser {
               identifier: childId,
               uti: uti,
               creationDate: childRecord.creationDate,
-              modificationDate: childRecord.modificationDate
+              modificationDate: childRecord.modificationDate,
+              changeCounter: childRecord.changeCounter,
+              generation: childRecord.generation
             ))
         }
 
@@ -928,6 +961,8 @@ package struct NoteParser {
       identifier: identifier,
       creationDate: galleryRecord?.creationDate,
       modificationDate: galleryRecord?.modificationDate,
+      changeCounter: galleryRecord?.changeCounter ?? 0,
+      generation: galleryRecord?.generation,
       items: galleryItems
     )
   }

@@ -14,6 +14,11 @@ public struct Note {
   public var creationDate: Date? { record.creationDate }
   public var isPinned: Bool { record.isPinned }
   public var isPasswordProtected: Bool { record.isPasswordProtected }
+  public var isMarkedForDeletion: Bool { record.isMarkedForDeletion }
+
+  /// CoreData optimistic lock counter. Increments on every edit.
+  public var changeCounter: Int64 { record.changeCounter }
+
   public var folderIdentifier: String? { record.folderIdentifier }
   public var accountIdentifier: String? { record.accountIdentifier }
   public let account: NotesAccount?

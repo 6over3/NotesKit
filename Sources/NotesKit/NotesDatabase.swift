@@ -209,13 +209,13 @@ package final class NotesDatabase {
     let query: String
     if let accountCol = accountColumnName {
       query = """
-        SELECT ZIDENTIFIER, \(titleColumnName), ZPARENT, \(accountCol), \(smartFolderExpr)
+        SELECT ZIDENTIFIER, \(titleColumnName), ZPARENT, \(accountCol), \(smartFolderExpr), ZFOLDERTYPE
         FROM ZICCLOUDSYNCINGOBJECT
         WHERE Z_ENT = ? AND (ZMARKEDFORDELETION = 0 OR ZMARKEDFORDELETION IS NULL)
         """
     } else {
       query = """
-        SELECT ZIDENTIFIER, \(titleColumnName), ZPARENT, NULL, \(smartFolderExpr)
+        SELECT ZIDENTIFIER, \(titleColumnName), ZPARENT, NULL, \(smartFolderExpr), ZFOLDERTYPE
         FROM ZICCLOUDSYNCINGOBJECT
         WHERE Z_ENT = ? AND (ZMARKEDFORDELETION = 0 OR ZMARKEDFORDELETION IS NULL)
         """
@@ -261,6 +261,8 @@ package final class NotesDatabase {
         smartFolderQuery = nil
       }
 
+      let folderType = sqlite3_column_int64(queryStatement, 5)
+
       folders.append(
         NotesFolder(
           identifier: identifier,
@@ -268,7 +270,8 @@ package final class NotesDatabase {
           parentIdentifier: parent,
           accountIdentifier: account,
           isSmartFolder: smartFolderQuery != nil && !smartFolderQuery!.isEmpty,
-          smartFolderQuery: smartFolderQuery
+          smartFolderQuery: smartFolderQuery,
+          isTrash: folderType == 1
         ))
     }
 
@@ -371,7 +374,9 @@ package final class NotesDatabase {
           n.\(folderColumnName),
           a.ZIDENTIFIER,
           d.ZDATA,
-          n.ZISPASSWORDPROTECTED
+          n.ZISPASSWORDPROTECTED,
+          n.ZMARKEDFORDELETION,
+          n.Z_OPT
         FROM ZICCLOUDSYNCINGOBJECT n
         LEFT OUTER JOIN ZICCLOUDSYNCINGOBJECT a
           ON n.\(accountCol) = a.Z_PK AND a.Z_ENT = ?
@@ -389,7 +394,9 @@ package final class NotesDatabase {
           n.ZISPINNED,
           n.\(folderColumnName),
           d.ZDATA,
-          n.ZISPASSWORDPROTECTED
+          n.ZISPASSWORDPROTECTED,
+          n.ZMARKEDFORDELETION,
+          n.Z_OPT
         FROM ZICCLOUDSYNCINGOBJECT n
         INNER JOIN ZICNOTEDATA d
           ON n.ZNOTEDATA = d.Z_PK
@@ -474,6 +481,11 @@ package final class NotesDatabase {
 
       let isPasswordProtected = sqlite3_column_int64(queryStatement, passwordColumnIndex) != 0
 
+      let deletionColumnIndex = passwordColumnIndex + 1
+      let optColumnIndex = passwordColumnIndex + 2
+      let isMarkedForDeletion = sqlite3_column_int64(queryStatement, deletionColumnIndex) != 0
+      let changeCounter = sqlite3_column_int64(queryStatement, optColumnIndex)
+
       notes.append(
         NoteRecord(
           identifier: identifier,
@@ -483,6 +495,8 @@ package final class NotesDatabase {
           creationDate: creationDate,
           isPinned: isPinned,
           isPasswordProtected: isPasswordProtected,
+          isMarkedForDeletion: isMarkedForDeletion,
+          changeCounter: changeCounter,
           folderIdentifier: folderIdentifier,
           accountIdentifier: accountIdentifier
         ))
@@ -525,7 +539,8 @@ package final class NotesDatabase {
         ZFILESIZE, ZOCRSUMMARY, ZHANDWRITINGSUMMARY, ZIMAGECLASSIFICATIONSUMMARY,
         ZADDITIONALINDEXABLETEXT, ZFALLBACKTITLE, ZFALLBACKSUBTITLEIOS,
         ZFALLBACKSUBTITLEMAC, ZMETADATADATA, \(titleExpression),
-        \(creationDateCol), \(modificationDateCol)
+        \(creationDateCol), \(modificationDateCol),
+        ZMARKEDFORDELETION, Z_OPT, ZGENERATION
       FROM ZICCLOUDSYNCINGOBJECT
       WHERE ZIDENTIFIER = ?
       """
@@ -635,6 +650,10 @@ package final class NotesDatabase {
       modificationDate = nil
     }
 
+    let isMarkedForDeletion = sqlite3_column_int64(statement, 24) != 0
+    let changeCounter = sqlite3_column_int64(statement, 25)
+    let generation = sqlite3_column_text(statement, 26).map { String(cString: $0) }
+
     return AttachmentRecord(
       identifier: id,
       title: title,
@@ -656,7 +675,10 @@ package final class NotesDatabase {
       fallbackSubtitleMac: fallbackSubtitleMac,
       metadataJSON: metadataJSON,
       creationDate: creationDate,
-      modificationDate: modificationDate
+      modificationDate: modificationDate,
+      isMarkedForDeletion: isMarkedForDeletion,
+      changeCounter: changeCounter,
+      generation: generation
     )
   }
 

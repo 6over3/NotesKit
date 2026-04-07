@@ -16,13 +16,17 @@ public struct NotesFolder: Sendable {
   /// The search query for smart folders, as JSON.
   public let smartFolderQuery: String?
 
+  /// Whether this is the "Recently Deleted" trash folder.
+  public let isTrash: Bool
+
   internal init(
     identifier: String,
     name: String?,
     parentIdentifier: String?,
     accountIdentifier: String?,
     isSmartFolder: Bool = false,
-    smartFolderQuery: String? = nil
+    smartFolderQuery: String? = nil,
+    isTrash: Bool = false
   ) {
     self.identifier = identifier
     self.name = name
@@ -30,5 +34,6 @@ public struct NotesFolder: Sendable {
     self.accountIdentifier = accountIdentifier
     self.isSmartFolder = isSmartFolder
     self.smartFolderQuery = smartFolderQuery
+    self.isTrash = isTrash
   }
 }
