@@ -6,7 +6,7 @@
 import Foundation
 
 /// An attachment in a note.
-public enum NoteAttachment: Equatable, Sendable {
+public enum NoteAttachment: Equatable, Sendable, Codable {
   case image(Image)
   case pdf(PDF)
   case video(Video)
@@ -141,11 +141,158 @@ public enum NoteAttachment: Equatable, Sendable {
   }
 }
 
+// MARK: - Type Name
+
+extension NoteAttachment {
+
+  /// Machine-readable type name for this attachment case.
+  public var typeName: String {
+    switch self {
+    case .image: "image"
+    case .pdf: "pdf"
+    case .video: "video"
+    case .audio: "audio"
+    case .file: "file"
+    case .drawing: "drawing"
+    case .url: "url"
+    case .table: "table"
+    case .calendar: "calendar"
+    case .vcard: "vcard"
+    case .gallery: "gallery"
+    case .scan: "scan"
+    case .unknown: "unknown"
+    case .deleted: "deleted"
+    }
+  }
+
+  /// Filename from the inner type, if one exists.
+  public var filename: String? {
+    switch self {
+    case .image(let a): a.filename
+    case .pdf(let a): a.filename
+    case .video(let a): a.filename
+    case .audio(let a): a.filename
+    case .file(let a): a.filename
+    case .vcard(let a): a.filename
+    default: nil
+    }
+  }
+
+  /// File size in bytes, if known.
+  public var fileSize: Int64? {
+    switch self {
+    case .image(let a): a.fileSize
+    case .pdf(let a): a.fileSize
+    case .video(let a): a.fileSize
+    case .audio(let a): a.fileSize
+    case .file(let a): a.fileSize
+    default: nil
+    }
+  }
+
+  /// UTI string, if the attachment type carries one.
+  public var uti: String? {
+    switch self {
+    case .image(let a): a.uti
+    case .pdf(let a): a.uti
+    case .video(let a): a.uti
+    case .audio(let a): a.uti
+    case .file(let a): a.uti
+    case .drawing(let a): a.uti
+    case .url(let a): a.uti
+    case .calendar(let a): a.uti
+    case .vcard(let a): a.uti
+    case .scan(let a): a.uti
+    case .unknown(let a): a.uti
+    case .deleted(let a): a.uti
+    case .table, .gallery: nil
+    }
+  }
+}
+
+// MARK: - Metadata
+
+extension NoteAttachment {
+
+  /// Flat string dictionary of all type-specific metadata.
+  ///
+  /// Keys use snake_case. Only non-nil, non-empty values are included.
+  /// Dates are ISO 8601. Dimensions are formatted as "WxH".
+  public var metadata: [String: String] {
+    var m: [String: String] = [:]
+    m["type"] = typeName
+
+    if let gen = generation { m["generation"] = gen }
+    if let created = creationDate { m["created_at"] = created.ISO8601Format() }
+    if let modified = modificationDate { m["modified_at"] = modified.ISO8601Format() }
+
+    switch self {
+    case .image(let img):
+      if let w = img.width, let h = img.height {
+        m["dimensions"] = "\(Int(w))×\(Int(h))"
+      }
+      if let ocr = img.ocrText, !ocr.isEmpty { m["ocr_text"] = ocr }
+      if !img.imageClassifications.isEmpty {
+        m["image_classifications"] = img.imageClassifications.joined(separator: ", ")
+      }
+      if let loc = img.location {
+        m["latitude"] = String(loc.latitude)
+        m["longitude"] = String(loc.longitude)
+      }
+      if let text = img.additionalIndexableText, !text.isEmpty {
+        m["indexable_text"] = text
+      }
+
+    case .pdf(let pdf):
+      if let ocr = pdf.ocrText, !ocr.isEmpty { m["ocr_text"] = ocr }
+      if let text = pdf.additionalIndexableText, !text.isEmpty {
+        m["indexable_text"] = text
+      }
+
+    case .video(let vid):
+      if let d = vid.duration { m["duration"] = String(d) }
+      if let w = vid.width, let h = vid.height {
+        m["dimensions"] = "\(Int(w))×\(Int(h))"
+      }
+
+    case .audio(let aud):
+      if let t = aud.title { m["title"] = t }
+      if let d = aud.duration { m["duration"] = String(d) }
+
+    case .drawing(let drw):
+      if let w = drw.width, let h = drw.height {
+        m["dimensions"] = "\(Int(w))×\(Int(h))"
+      }
+      if let s = drw.handwritingSummary, !s.isEmpty { m["handwriting_summary"] = s }
+      if let t = drw.fallbackTitle, !t.isEmpty { m["fallback_title"] = t }
+      if let text = drw.additionalIndexableText, !text.isEmpty {
+        m["indexable_text"] = text
+      }
+
+    case .url(let link):
+      if let u = link.urlString { m["url"] = u }
+      if let t = link.title { m["title"] = t }
+      if let s = link.summary, !s.isEmpty { m["summary"] = s }
+
+    case .scan(let scan):
+      if let ocr = scan.ocrText, !ocr.isEmpty { m["ocr_text"] = ocr }
+      if let text = scan.additionalIndexableText, !text.isEmpty {
+        m["indexable_text"] = text
+      }
+
+    case .file, .gallery, .table, .calendar, .vcard, .unknown, .deleted:
+      break
+    }
+
+    return m
+  }
+}
+
 // MARK: - Attachment Types
 
 extension NoteAttachment {
 
-  public struct Image: Equatable, Sendable {
+  public struct Image: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let filename: String?
@@ -160,9 +307,22 @@ extension NoteAttachment {
     public let ocrText: String?
     public let imageClassifications: [String]
     public let additionalIndexableText: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti, filename, location
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+      case fileSize = "file_size"
+      case width, height
+      case ocrText = "ocr_text"
+      case imageClassifications = "image_classifications"
+      case additionalIndexableText = "additional_indexable_text"
+    }
   }
 
-  public struct PDF: Equatable, Sendable {
+  public struct PDF: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let filename: String?
@@ -173,9 +333,20 @@ extension NoteAttachment {
     public let fileSize: Int64?
     public let ocrText: String?
     public let additionalIndexableText: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti, filename
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+      case fileSize = "file_size"
+      case ocrText = "ocr_text"
+      case additionalIndexableText = "additional_indexable_text"
+    }
   }
 
-  public struct Video: Equatable, Sendable {
+  public struct Video: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let filename: String?
@@ -187,9 +358,19 @@ extension NoteAttachment {
     public let fileSize: Int64?
     public let width: Float?
     public let height: Float?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti, filename
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation, duration
+      case fileSize = "file_size"
+      case width, height
+    }
   }
 
-  public struct Audio: Equatable, Sendable {
+  public struct Audio: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let title: String?
@@ -200,9 +381,18 @@ extension NoteAttachment {
     public let generation: String?
     public let duration: Double?
     public let fileSize: Int64?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti, title, filename
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation, duration
+      case fileSize = "file_size"
+    }
   }
 
-  public struct File: Equatable, Sendable {
+  public struct File: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let filename: String?
@@ -211,9 +401,18 @@ extension NoteAttachment {
     public let changeCounter: Int64
     public let generation: String?
     public let fileSize: Int64?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti, filename
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+      case fileSize = "file_size"
+    }
   }
 
-  public struct Drawing: Equatable, Sendable {
+  public struct Drawing: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let creationDate: Date?
@@ -226,9 +425,21 @@ extension NoteAttachment {
     public let handwritingSummary: String?
     public let additionalIndexableText: String?
     public let canvasBounds: CanvasBounds?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation, width, height
+      case fallbackTitle = "fallback_title"
+      case handwritingSummary = "handwriting_summary"
+      case additionalIndexableText = "additional_indexable_text"
+      case canvasBounds = "canvas_bounds"
+    }
   }
 
-  public struct URLLink: Equatable, Sendable {
+  public struct URLLink: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let creationDate: Date?
@@ -238,26 +449,52 @@ extension NoteAttachment {
     public let urlString: String?
     public let title: String?
     public let summary: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+      case urlString = "url_string"
+      case title, summary
+    }
   }
 
-  public struct Table: Equatable, Sendable {
+  public struct Table: Equatable, Sendable, Codable {
     public let identifier: String
     public let creationDate: Date?
     public let modificationDate: Date?
     public let changeCounter: Int64
     public let generation: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+    }
   }
 
-  public struct Calendar: Equatable, Sendable {
+  public struct Calendar: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
     public let changeCounter: Int64
     public let generation: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+    }
   }
 
-  public struct VCard: Equatable, Sendable {
+  public struct VCard: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let creationDate: Date?
@@ -265,18 +502,34 @@ extension NoteAttachment {
     public let changeCounter: Int64
     public let generation: String?
     public let filename: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation, filename
+    }
   }
 
-  public struct Gallery: Equatable, Sendable {
+  public struct Gallery: Equatable, Sendable, Codable {
     public let identifier: String
     public let creationDate: Date?
     public let modificationDate: Date?
     public let changeCounter: Int64
     public let generation: String?
     public let items: [NoteAttachment]
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation, items
+    }
   }
 
-  public struct Scan: Equatable, Sendable {
+  public struct Scan: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let creationDate: Date?
@@ -285,25 +538,51 @@ extension NoteAttachment {
     public let generation: String?
     public let ocrText: String?
     public let additionalIndexableText: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+      case ocrText = "ocr_text"
+      case additionalIndexableText = "additional_indexable_text"
+    }
   }
 
-  public struct Unknown: Equatable, Sendable {
+  public struct Unknown: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
     public let changeCounter: Int64
     public let generation: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+    }
   }
 
   /// An attachment whose backing record was deleted from the database.
-  public struct Deleted: Equatable, Sendable {
+  public struct Deleted: Equatable, Sendable, Codable {
     public let identifier: String
     public let uti: String
     public let creationDate: Date?
     public let modificationDate: Date?
     public let changeCounter: Int64
     public let generation: String?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, uti
+      case creationDate = "creation_date"
+      case modificationDate = "modification_date"
+      case changeCounter = "change_counter"
+      case generation
+    }
   }
 }
 
@@ -312,22 +591,33 @@ extension NoteAttachment {
 extension NoteAttachment {
 
   /// Canvas bounds for a drawing attachment.
-  public struct CanvasBounds: Equatable, Sendable {
+  public struct CanvasBounds: Equatable, Sendable, Codable {
     public let originX: Double
     public let originY: Double
     public let width: Double
     public let height: Double
+
+    private enum CodingKeys: String, CodingKey {
+      case originX = "origin_x"
+      case originY = "origin_y"
+      case width, height
+    }
   }
 
   /// Geographic location for an attachment.
-  public struct Location: Equatable, Sendable {
+  public struct Location: Equatable, Sendable, Codable {
     public let latitude: Double
     public let longitude: Double
     public let placemarkData: Data?
+
+    private enum CodingKeys: String, CodingKey {
+      case latitude, longitude
+      case placemarkData = "placemark_data"
+    }
   }
 
   /// A thumbnail for an attachment.
-  public struct Thumbnail: Equatable, Sendable {
+  public struct Thumbnail: Equatable, Sendable, Codable {
     public let identifier: String
     public let scale: Int
     public let width: Int
@@ -335,5 +625,11 @@ extension NoteAttachment {
     /// 0 = light, 1 = dark.
     public let appearanceType: Int
     public let data: Data?
+
+    private enum CodingKeys: String, CodingKey {
+      case identifier, scale, width, height
+      case appearanceType = "appearance_type"
+      case data
+    }
   }
 }

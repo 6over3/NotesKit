@@ -89,4 +89,17 @@ public struct Note: Sendable {
   public func markdown(password: String? = nil) throws -> String {
     try MarkdownVisitor.markdown(from: self, password: password)
   }
+
+  /// Flat string dictionary of note-level metadata.
+  ///
+  /// Merges account and folder metadata when available.
+  /// Keys use snake_case. Only non-nil, non-empty values are included.
+  public var metadata: [String: String] {
+    var m: [String: String] = [:]
+    if let account { m.merge(account.metadata) { _, new in new } }
+    if let folder, let name = folder.name { m["folder"] = name }
+    if isPinned { m["pinned"] = "true" }
+    if isMarkedForDeletion { m["deleted"] = "true" }
+    return m
+  }
 }

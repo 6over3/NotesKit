@@ -4,7 +4,7 @@
 // See LICENSE file for details.
 
 /// Transcription of an audio recording.
-public struct AudioTranscription: Equatable, Sendable {
+public struct AudioTranscription: Equatable, Sendable, Codable {
 
   /// Individual transcript segments with timing information.
   public let segments: [TranscriptSegment]
@@ -17,6 +17,12 @@ public struct AudioTranscription: Equatable, Sendable {
 
   /// Audio fragments (technical data about the recording).
   public let fragments: [AudioFragment]
+
+  private enum CodingKeys: String, CodingKey {
+    case segments, summary
+    case topLineSummary = "top_line_summary"
+    case fragments
+  }
 
   /// Full transcription text, concatenated from all segments.
   public var fullText: String {
@@ -58,10 +64,22 @@ public struct AudioTranscription: Equatable, Sendable {
     guard let lastSegment = segments.last else { return 0.0 }
     return lastSegment.endTime
   }
+
+  /// Flat string dictionary of transcription metadata.
+  public var metadata: [String: String] {
+    var m: [String: String] = [:]
+    m["transcription"] = fullText
+    if let summary, !summary.isEmpty { m["transcription_summary"] = summary }
+    if let topLine = topLineSummary, !topLine.isEmpty { m["transcription_top_line"] = topLine }
+    m["transcription_segments"] = String(segments.count)
+    let formatted = formattedTranscript(includeTimestamps: true, includeSpeaker: true)
+    if !formatted.isEmpty { m["formatted_transcript"] = formatted }
+    return m
+  }
 }
 
 /// A single segment of transcribed audio.
-public struct TranscriptSegment: Equatable, Sendable {
+public struct TranscriptSegment: Equatable, Sendable, Codable {
   public let speaker: String?
   public let text: String
   public let timestamp: Double
@@ -71,7 +89,7 @@ public struct TranscriptSegment: Equatable, Sendable {
 }
 
 /// An audio fragment (technical metadata).
-public struct AudioFragment: Equatable, Sendable {
+public struct AudioFragment: Equatable, Sendable, Codable {
   public let timestamp: Double
   public let duration: Double
 }

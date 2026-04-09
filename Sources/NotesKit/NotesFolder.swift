@@ -4,7 +4,7 @@
 // See LICENSE file for details.
 
 /// A folder in the Notes library.
-public struct NotesFolder: Sendable {
+public struct NotesFolder: Sendable, Codable {
   public let identifier: String
   public let name: String?
   public let parentIdentifier: String?
@@ -18,6 +18,15 @@ public struct NotesFolder: Sendable {
 
   /// Whether this is the "Recently Deleted" trash folder.
   public let isTrash: Bool
+
+  private enum CodingKeys: String, CodingKey {
+    case identifier, name
+    case parentIdentifier = "parent_identifier"
+    case accountIdentifier = "account_identifier"
+    case isSmartFolder = "is_smart_folder"
+    case smartFolderQuery = "smart_folder_query"
+    case isTrash = "is_trash"
+  }
 
   internal init(
     identifier: String,

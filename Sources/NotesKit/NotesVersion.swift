@@ -4,7 +4,7 @@
 // See LICENSE file for details.
 
 /// The schema version of the Notes database.
-public enum NotesVersion: Int, Sendable {
+public enum NotesVersion: Int, Sendable, Codable {
   case v9 = 9
   case v10 = 10
   case v11 = 11

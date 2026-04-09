@@ -4,10 +4,10 @@
 // See LICENSE file for details.
 
 /// A Notes account (iCloud, On My Mac, Gmail, etc.).
-public struct NotesAccount: Sendable {
+public struct NotesAccount: Sendable, Codable {
 
   /// The type of Notes account.
-  public enum AccountType: Int, Sendable {
+  public enum AccountType: Int, Sendable, Codable {
     case local = 0
     case exchange = 1
     case imap = 2
@@ -30,4 +30,17 @@ public struct NotesAccount: Sendable {
   public let identifier: String
   public let name: String?
   public let accountType: AccountType
+
+  private enum CodingKeys: String, CodingKey {
+    case identifier, name
+    case accountType = "account_type"
+  }
+
+  /// Flat string dictionary for use as provider metadata.
+  public var metadata: [String: String] {
+    var m: [String: String] = [:]
+    if let name { m["account"] = name }
+    m["account_type"] = accountType.displayName
+    return m
+  }
 }
