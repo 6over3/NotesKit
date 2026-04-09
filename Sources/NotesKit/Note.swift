@@ -6,7 +6,7 @@
 import Foundation
 
 /// A single note from the Apple Notes library.
-public struct Note {
+public struct Note: Sendable {
 
   public var identifier: String { record.identifier }
   public var title: String { record.title }

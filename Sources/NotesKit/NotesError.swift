@@ -5,7 +5,7 @@
 
 import Foundation
 
-public enum NotesError: LocalizedError {
+public enum NotesError: LocalizedError, @unchecked Sendable {
   case decompressionFailed
   case protobufDecodingFailed(Error)
   case invalidNoteStructure

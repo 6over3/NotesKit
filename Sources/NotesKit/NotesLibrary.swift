@@ -6,7 +6,7 @@
 import Foundation
 
 /// Entry point for reading Apple Notes data.
-public struct NotesLibrary {
+public struct NotesLibrary: Sendable {
 
   /// The source location for the Notes database.
   public enum Source {

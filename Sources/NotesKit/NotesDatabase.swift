@@ -9,7 +9,9 @@ import SwiftProtobuf
 
 // MARK: - Notes Database
 
-package final class NotesDatabase {
+// SQLite opened SQLITE_OPEN_READONLY; Apple ships SQLite in serialized mode,
+// so concurrent reads on the same connection are safe.
+package final class NotesDatabase: @unchecked Sendable {
   private let connection: OpaquePointer?
   private(set) var version: NotesVersion = .unknown
 
